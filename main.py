@@ -52,9 +52,14 @@ def handle_webhook(request):
     
     if match:
         extracted_name = match.group(1).strip().title()
-    else:
-        # Fallback for cases where the user just says the name
-        extracted_name = user_input.strip().title()
+   else:
+      
+        match_reverse = re.search(r"(\w+)\s+(?:i am|is my name)", user_input_lower)
+        if match_reverse:
+            extracted_name = match_reverse.group(1).strip().title()
+        else:
+            # Fallback for just the name "Rajesh"
+            extracted_name = user_input.strip().title()
 
     # Prepare the success response with the cleaned name and a fulfillment message
     dialogflow_response = {
