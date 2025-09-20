@@ -21,11 +21,13 @@ def handle_webhook(request):
 
     user_input_lower = user_input.lower()
 
+    # Define refusal patterns
     refusal_patterns = [
         r"\b(no|don't|will not|refuse|prefer not)\b",
         r"\b(why|what for)\b",
     ]
 
+    # Check for refusal or inquiry
     for pattern in refusal_patterns:
         if re.search(pattern, user_input_lower):
             dialogflow_response = {
@@ -35,7 +37,7 @@ def handle_webhook(request):
                         {
                             "text": {
                                 "text": [
-                                    "I understand. Providing your name helps me personalize our conversation. If you change your mind, tell me your name. Otherwise, how can I assist you with Lipaglyn Studies and Research?"
+                                    "I understand. Providing your name helps me to personalize our conversation. If you change your mind, tell me your name. Otherwise, how can I assist you with Lipaglyn Studies and Research?"
                                 ]
                             }
                         }
@@ -44,11 +46,34 @@ def handle_webhook(request):
             }
             return jsonify(dialogflow_response)
 
-    # Extract name
+    # If no refusal is found, proceed with name extraction logic
+    extracted_name = ""
     match = re.search(r"(?:i am|my name is|you can call me)\s+(.*)", user_input_lower)
-    extracted_name = match.group(1).strip().title() if match else user_input.strip().title()
+    
+    if match:
+        extracted_name = match.group(1).strip().title()
+    else:
+        # Fallback for cases where the user just says the name
+        extracted_name = user_input.strip().title()
 
+    # Prepare the success response with the cleaned name and a fulfillment message
     dialogflow_response = {
-        "sessionInfo": {"parameters": {"name": extracted_name, "name_provided": "true"}}
+        "sessionInfo": {
+            "parameters": {
+                "name": extracted_name,
+                "name_provided": "true"
+            }
+        },
+        "fulfillmentResponse": {
+            "messages": [
+                {
+                    "text": {
+                        "text": [
+                            f"Thank you, Dr.{extracted_name}! 😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
+                        ]
+                    }
+                }
+            ]
+        },
     }
     return jsonify(dialogflow_response)
