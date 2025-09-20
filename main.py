@@ -46,22 +46,18 @@ def handle_webhook(request):
             }
             return jsonify(dialogflow_response)
 
-    # If no refusal is found, proceed with name extraction logic
-    extracted_name = ""
+    # Name extraction
     match = re.search(r"(?:i am|my name is|you can call me)\s+(.*)", user_input_lower)
-    
     if match:
         extracted_name = match.group(1).strip().title()
-   else:
-      
+    else:
         match_reverse = re.search(r"(\w+)\s+(?:i am|is my name)", user_input_lower)
         if match_reverse:
             extracted_name = match_reverse.group(1).strip().title()
         else:
-            # Fallback for just the name "Rajesh"
             extracted_name = user_input.strip().title()
 
-    # Prepare the success response with the cleaned name and a fulfillment message
+    # Prepare success response
     dialogflow_response = {
         "sessionInfo": {
             "parameters": {
