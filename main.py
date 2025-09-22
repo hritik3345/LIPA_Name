@@ -144,7 +144,6 @@ def handle_webhook(request):
             "messages": [{
                 "text": {"text": [
                     "No worries — your name is optional. If you’d like, you can tell me "
-                    "your name to personalize the chat (e.g., “I am Asha”). "
                     "Meanwhile, what can I help you find about Lipaglyn?"
                 ]}
             }]
