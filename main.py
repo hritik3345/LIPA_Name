@@ -76,7 +76,7 @@ def handle_webhook(request):
                 {
                     "text": {
                         "text": [
-                            f"Thank you, Dr.{extracted_name}! 😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
+                            f"Thank you, Metabolic Warrior! 😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
                         ]
                     }
                 }
