@@ -128,8 +128,7 @@ def handle_webhook(request):
             "fulfillmentResponse": {
                 "messages": [{
                     "text": {"text": [
-                        f"Thanks, {clean}! I’m here to help. "
-                        "What would you like to know about Lipaglyn studies?"
+                        f"Thanks, Dr.{clean}!😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?
                     ]}
                 }]
             }
