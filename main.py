@@ -5,7 +5,7 @@ from flask import jsonify
 
 @functions_framework.http
 def handle_webhook(request):
-    # Health check & human-in-browser check
+    # Health check
     if request.method == "GET":
         return ("OK", 200)
 
@@ -15,19 +15,17 @@ def handle_webhook(request):
     params = session_info.get("parameters") or {}
     user_input = params.get("name")
 
-    # If no name provided yet, return empty JSON (Dialogflow CX-friendly)
     if not user_input:
         return jsonify({})
 
     user_input_lower = user_input.lower()
 
-    # Define refusal patterns
+    # Define refusal patterns (unchanged)
     refusal_patterns = [
         r"\b(no|don't|will not|refuse|prefer not)\b",
         r"\b(why|what for)\b",
     ]
 
-    # Check for refusal or inquiry
     for pattern in refusal_patterns:
         if re.search(pattern, user_input_lower):
             dialogflow_response = {
@@ -46,18 +44,26 @@ def handle_webhook(request):
             }
             return jsonify(dialogflow_response)
 
-    # Name extraction
-    match = re.search(r"(?:i am|my name is|you can call me)\s+(.*)", user_input_lower)
+    # More specific name extraction logic
+    extracted_name = ""
+
+    # This pattern looks for "my name is..." or "i am..."
+    match = re.search(r"(?:my name is|i am|you can call me)\s+([\w\s]+)", user_input_lower)
     if match:
         extracted_name = match.group(1).strip().title()
     else:
-        match_reverse = re.search(r"(\w+)\s+(?:i am|is my name)", user_input_lower)
-        if match_reverse:
-            extracted_name = match_reverse.group(1).strip().title()
+        # A new, more specific pattern to identify a proper name
+        # This will look for capitalized words, a common pattern for names
+        proper_name_pattern = r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b"
+        matches = re.findall(proper_name_pattern, user_input)
+        if matches:
+            # Take the first matched proper name as the likely name
+            extracted_name = matches[0]
         else:
+            # Fallback to the original logic if no specific pattern is found
             extracted_name = user_input.strip().title()
 
-    # Prepare success response
+    # Prepare the success response
     dialogflow_response = {
         "sessionInfo": {
             "parameters": {
