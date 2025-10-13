@@ -118,7 +118,7 @@ def handle_webhook(request):
     candidate = extract_candidate(txt)
     if candidate and is_valid_name(candidate):
         clean = _titlecase_name(candidate)
-        greeting_text = f"Nice to meet you, Dr. {clean}! 😊 How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
+        greeting_text = f"Thanks,, Dr. {clean}! 😊 How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
         return jsonify({
             "sessionInfo": {"parameters": {
                 "name": clean,
