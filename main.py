@@ -94,9 +94,10 @@ def handle_webhook(request):
     # No attempt yet → do nothing
     if not raw:
         return jsonify({})
+           txt = raw.strip()
 
     # --- NEW: Handle Greetings ---
-    if GREETING_PATTERNS.search(raw):
+  if re.search(r"\b(?:hi|hello|hey|hiya|greetings|good\s*(morning|afternoon|evening))\b", txt, re.I):
         return jsonify({
             "sessionInfo": {"parameters": {
                 "name": None,
