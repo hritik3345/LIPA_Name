@@ -108,7 +108,8 @@ def handle_webhook(request):
                     "text": {"text": [
                         "Hello there! 👋 It’s great to meet you. Could you please share your name with me so we can get started?"
                     ]}
-                }]
+                }],
+            "mergeBehavior": "REPLACE" 
             }
         })
 
