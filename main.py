@@ -2,6 +2,7 @@ import functions_framework
 import re
 from flask import jsonify
 
+# --- Pattern Definitions ---
 REFUSAL_PATTERNS = re.compile(
     r"\b(?:no|don'?t|do not|won'?t|will not|prefer not|rather not|skip|not now)\b|"
     r"\b(?:why|what for|not comfortable|keep it private)\b",
@@ -13,17 +14,25 @@ INTRO_PATTERNS = re.compile(
     re.I,
 )
 
+# Greeting words (new addition)
+GREETING_PATTERNS = re.compile(
+    r"\b(?:hi|hello|hey|hiya|greetings|good\s*(morning|afternoon|evening))\b",
+    re.I,
+)
+
 # Words that clearly aren't names in this domain
 BLOCKLIST_WORDS = {
     "lipaglyn", "tablet", "tablets", "drug", "medicine", "mr", "mrs", "ms",
     "doctor", "dr", "dose", "dosing", "mg", "what", "why", "how", "where",
-    "when", "which", "faq", "question", "help","uses","define","nash","nafld","studies"
+    "when", "which", "faq", "question", "help", "uses", "define", "nash", "nafld", "studies"
 }
 
 # Accept letters (Latin incl. accents) + common name punctuation
 NAME_TOKEN = r"[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[-'][A-Za-zÀ-ÖØ-öø-ÿ]+)?"
 CANDIDATE_RE = re.compile(rf"^{NAME_TOKEN}(?:\s+{NAME_TOKEN}){{0,2}}$")  # 1–3 tokens
 
+
+# --- Helper Functions ---
 def _titlecase_name(name: str) -> str:
     parts = []
     for w in name.split():
@@ -33,58 +42,45 @@ def _titlecase_name(name: str) -> str:
             parts.append(w[:1].upper() + w[1:].lower())
     return " ".join(parts)
 
+
 def looks_like_question_or_sentence(text: str) -> bool:
     if "?" in text:
         return True
-    # Long inputs with many words probably aren’t names
     if len(text.split()) >= 5:
         return True
-    # Contains obvious non-name punctuation
     if re.search(r"[,:;@/\\\d]", text):
         return True
-    # Starts with interrogatives
     if re.match(r"^\s*(what|why|how|where|when|which)\b", text, re.I):
         return True
     return False
 
+
 def extract_candidate(raw: str) -> str | None:
     txt = raw.strip()
-
-    # If they wrote a sentence, try to pull name after “my name is / I am / call me”
     m = INTRO_PATTERNS.search(txt)
     if m:
         candidate = txt[m.end():].strip()
-        # stop at first punctuation
         candidate = re.split(r"[,.!?;:]\s*", candidate)[0].strip()
-
-        # Keep only first 1–3 tokens
         tokens = candidate.split()
         candidate = " ".join(tokens[:3])
-
         return candidate or None
-
-    # Otherwise treat the whole input as a candidate (short, no punctuation)
     return txt
+
 
 def is_valid_name(candidate: str) -> bool:
     if not candidate or looks_like_question_or_sentence(candidate):
         return False
-
-    # Too short/long
     if len(candidate) < 2 or len(candidate) > 40:
         return False
-
-    # Must match the 1–3 token pattern
     if not CANDIDATE_RE.match(candidate):
         return False
-
-    # Blocklist words (domain terms / interrogatives)
     low = candidate.lower()
     if any(w in BLOCKLIST_WORDS for w in low.replace("-", " ").replace("'", " ").split()):
         return False
-
     return True
 
+
+# --- Main Webhook Function ---
 @functions_framework.http
 def handle_webhook(request):
     if request.method == "GET":
@@ -99,11 +95,27 @@ def handle_webhook(request):
     if not raw:
         return jsonify({})
 
-    # Refusal
+    # --- NEW: Handle Greetings ---
+    if GREETING_PATTERNS.search(raw):
+        return jsonify({
+            "sessionInfo": {"parameters": {
+                "name": None,
+                "name_provided": "false"
+            }},
+            "fulfillmentResponse": {
+                "messages": [{
+                    "text": {"text": [
+                        "Hello there! 👋 It’s great to meet you. Could you please share your name with me so we can get started?"
+                    ]}
+                }]
+            }
+        })
+
+    # --- Handle Refusal ---
     if REFUSAL_PATTERNS.search(raw):
         return jsonify({
             "sessionInfo": {"parameters": {
-                "name": None,                # clear any partial fill
+                "name": None,
                 "name_provided": "false"
             }},
             "fulfillmentResponse": {
@@ -116,7 +128,7 @@ def handle_webhook(request):
             }
         })
 
-    # Try to extract + validate
+    # --- Try Extracting and Validating a Name ---
     candidate = extract_candidate(raw)
     if candidate and is_valid_name(candidate):
         clean = _titlecase_name(candidate)
@@ -128,22 +140,22 @@ def handle_webhook(request):
             "fulfillmentResponse": {
                 "messages": [{
                     "text": {"text": [
-                        f"Thanks, Dr.{clean}!😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
+                        f"Thanks, Dr.{clean}! 😊 I'm here to help. How can I assist you with the 'Lipaglyn Research Studies and Information' today?"
                     ]}
                 }]
             }
         })
 
-    # Not a valid name → clear param and continue non-blocking
+    # --- Invalid / Non-name input ---
     return jsonify({
         "sessionInfo": {"parameters": {
-            "name": None,                 # clears the slot so CX won’t stick with bad value
+            "name": None,
             "name_provided": "false"
         }},
         "fulfillmentResponse": {
             "messages": [{
                 "text": {"text": [
-                    "No worries — your name is optional. If you’d like, you can tell me "
+                    "No worries — your name is optional. If you’d like, you can tell me your name so I can address you properly. "
                     "Meanwhile, what can I help you find about Lipaglyn?"
                 ]}
             }]
