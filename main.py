@@ -127,7 +127,9 @@ def handle_webhook(request):
             "fulfillmentResponse": {
                 "messages": [{
                     "text": {"text": [greeting_text]}
-                }]
+                }],
+                "mergeBehavior": "REPLACE"
+
             }
         })
 
