@@ -18,7 +18,7 @@ GREETING_PATTERNS = re.compile(
 BLOCKLIST_WORDS = {
     "lipaglyn", "tablet", "tablets", "drug", "medicine", "mr", "mrs", "ms",
     "doctor", "dr", "dose", "dosing", "mg", "what", "why", "how", "where",
-    "when", "which", "faq", "question", "help", "uses", "define", "nash", "nafld", "studies"
+    "when", "which", "faq", "question", "help", "uses", "define", "nash", "nafld", "studies","Masld classification","press v study","press vi study","sitaglyptn","insulin resistance","Contraindications"
 }
 
 NAME_TOKEN = r"[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[-'][A-Za-zÀ-ÖØ-öø-ÿ]+)?"
